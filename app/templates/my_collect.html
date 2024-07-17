@@ -1,0 +1,82 @@
+{% extends "user_templates.html" %}
+
+{% block css %}{% endblock %}
+
+{% block content %}
+
+    <div class="panel panel-success " style="margin-top: 70px">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{ table_head }}</h3>
+      </div>
+      <div class="panel-body">
+          <div class="container">
+        <!-- Table -->
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>标题</th>
+                <th>发表时间</th>
+                <th>类型</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for obj in queryset %}
+                <tr>
+                    <td><a href="/reading/{{ obj.page_id.id}}/" target="_blank">{{ obj.page_id.title }}</a></td>
+                    <td>{{ obj.page_id.update_time }}</td>
+                    <td>{{ obj.page_id.get_page_type_display }}</td>
+                    <td>
+                         <button type="button" class="btn-danger btn1">
+                                    <span class="glyphicon glyphicon-trash" aria-hidden="true"></span> 移 除
+                                </button>
+                    </td>
+                </tr>
+            {% endfor %}
+
+            </tbody>
+        </table>
+        <div class="clearfix">
+            <ul class="pagination">
+                {{ page_string }}
+            </ul>
+
+        </div>
+    </div>
+      </div>
+    </div>
+
+
+
+
+{% endblock %}
+
+
+{% block js %}
+     <script type="text/javascript">
+        $(function () {
+            btn_click();
+        })
+
+
+        function btn_click() {
+            $("button").click(function () {
+                let user = $("#mine").text();
+                let page = $(this).closest("tr").find("a").text()
+                $.ajax({
+                    url: "/delete/collect/",
+                    type: "POST",
+                    data: {
+                        "name": user,
+                        "page": page
+                    },
+                    dataType: "JSON",
+                    success: function (res) {
+                        alert("移除成功！！！")
+                        location.reload()
+                    }
+                })
+            })
+        }
+    </script>
+{% endblock %}

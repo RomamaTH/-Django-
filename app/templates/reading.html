@@ -1,0 +1,243 @@
+{% extends 'user_templates.html' %}
+{% block css %}
+    <style>
+        body {
+            background-color: #f5f5f5; /* Light gray background */
+        }
+
+        .article-container {
+            background-color: #fff; /* White background for the container */
+            padding: 20px;
+            margin-top: 70px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+        }
+
+        .article-title {
+            margin-bottom: 20px;
+        }
+
+        .fon {
+            font-size: 20px !important;
+        }
+
+        .comment-input {
+            width: 100%;
+            height: 100px; /* 调整输入框高度以适应多行文本 */
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: none; /* 允许用户垂直调整输入框大小 */
+        }
+
+    </style>
+{% endblock %}
+
+
+{% block content %}
+    <div class=" fon article-container container">
+        <h1 id="page_title" class="article-title">{{ page.title }}</h1>
+        <small class="col align-self-end" style="color:red;">
+            <span class="glyphicon glyphicon-fire" aria-hidden="true">热度：{{ page.total_views }}</span>
+        </small>
+        <p>{{ page.body }}</p>
+
+        <hr>
+        <p><strong>发布日期：</strong> {{ page.update_time }}</p>
+        <span id="collect" class="glyphicon glyphicon-star"
+              style="color: rgb(128,128,128);float: right;margin-left: 25px;"></span>
+        <span id="favourite" class="glyphicon glyphicon-heart " style="color: rgb(128,128,128);float: right"></span>
+    </div>
+
+    <div class="article-container container ">
+
+
+        <div style="margin-bottom: 20px">
+            <label for="comment-input">写评论:</label>
+            <textarea id="comment-input" class="comment-input" rows="4" cols="50"
+                      placeholder="恶语伤人心,善语言结善缘......"></textarea>
+            <button id="add_comment" type="button" class="btn btn-primary" style="float: right">发 布</button>
+        </div>
+
+    </div>
+    <div class="container article-container">
+        <!-- 显示评论 -->
+        <div>
+            {% for comment in comments %}
+                <hr>
+                <p>
+                    <strong class="aaa" style="color: pink">{{ comment.user }}<span  class="glyphicon glyphicon-trash ljt" style="float: right" aria-hidden="true"></span></strong>在
+                    <span style="color: green">
+                    {{ comment.create_time|date:"Y-m-d H:i:s" }}
+
+                    </span> 时说：
+                </p>
+                <pre style="font-family: inherit; font-size: 1em;">
+                {{ comment.context }}</pre>
+
+            {% endfor %}
+        </div>
+    </div>
+
+
+
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        $(function () {
+            CSS_deter();
+            Edit_favorite();
+            Edit_collect();
+            add_comment();
+            delete_comment();
+        })
+        let user = $("#mine").text().trim();
+
+        function CSS_deter() {
+            $(document).ready(function () {
+                let favourite_exist = JSON.parse('{{ favourite_exist|yesno:"true,false" }}');
+                let collect_exist = JSON.parse('{{ collect_exist|yesno:"true,false" }}');
+                if (favourite_exist) {
+                    $("#favourite").css("color", "red");
+                } else {
+                    $("#favourite").css("color", "rgb(128,128,128)");
+                }
+                if (collect_exist) {
+                    $("#collect").css("color", "yellow");
+                } else {
+                    $("#collect").css("color", "rgb(128,128,128)");
+                }
+                $(".aaa").each(function () {
+                    let username = $(this).text();
+                    if (username.trim() !== user) {
+                        $(this).find(".ljt").hide();
+                    }
+                })
+
+            })
+        }
+
+        function Edit_favorite() {
+            $("#favourite").click(function () {
+                if (user === "") {
+                    $('#myModal').modal('show');
+                } else {
+                    $.ajax({
+                        url: "/favourite/",
+                        type: "POST",
+                        data: {
+                            "name": user,
+                            "page": $("#page_title").text()
+                        },
+                        dataType: "JSON",
+                        success: function (res) {
+                            if (res.status) {
+                                $("#favourite").css("color", "red");
+                                alert("点赞成功！！")
+                            } else {
+                                $.ajax({
+                                    url: "/delete/favourite/",
+                                    type: "POST",
+                                    data: {
+                                        "name": user,
+                                        "page": $("#page_title").text()
+                                    },
+                                    dataType: "JSON",
+                                    success: function (res) {
+                                        $("#favourite").css("color", "rgb(128,128,128)");
+                                    }
+                                })
+                            }
+                        }
+                    })
+                }
+
+            })
+        }
+
+        function Edit_collect() {
+            $("#collect").click(function () {
+                if (user === "") {
+                    $('#myModal').modal('show');
+                } else {
+                    $.ajax({
+                        url: "/collect/",
+                        type: "POST",
+                        data: {
+                            "name": user,
+                            "page": $("#page_title").text()
+                        },
+                        dataType: "JSON",
+                        success: function (res) {
+                            if (res.status) {
+                                $("#collect").css("color", "yellow");
+                                alert("收藏成功！！")
+                            } else {
+                                $.ajax({
+                                    url: "/delete/collect/",
+                                    type: "POST",
+                                    data: {
+                                        "name": user,
+                                        "page": $("#page_title").text()
+                                    },
+                                    dataType: "JSON",
+                                    success: function (res) {
+                                        $("#collect").css("color", "rgb(128,128,128)");
+                                    }
+                                })
+                            }
+                        }
+                    })
+                }
+
+            })
+        }
+
+        function add_comment() {
+            $("#add_comment").click(function () {
+                if (user === "") {
+                    $('#myModal').modal('show');
+                } else {
+                    $.ajax({
+                        url: "/add/comment/",
+                        type: "POST",
+                        data: {
+                            "user": user,
+                            "context": $("#comment-input").val(),
+                            "title": $("#page_title").text().trim(),
+
+                        },
+                        dataType: "JSON",
+                        success: function (res) {
+                            alert("评论成功!!!!")
+                            location.reload()
+                        }
+                    })
+                }
+            })
+        }
+
+        function delete_comment(){
+            $(".ljt").click(function (){
+                $.ajax({
+                    url:"/delete/comment/",
+                    type:"POST",
+                    data:{
+                      "name":user,
+                      "title":$("#page_title").text().trim(),
+                    },
+                    dataType:"JSON",
+                    success:function (res){
+                        alert("成功删除评论!!!");
+                        location.reload()
+                    }
+                })
+            })
+        }
+
+    </script>
+
+{% endblock %}
